@@ -43,7 +43,10 @@ pub fn run() {
             // 关闭 app 时把后端 sidecar 一并杀掉
             if let RunEvent::ExitRequested { .. } = event {
                 let state = app_handle.state::<SidecarChild>();
-                if let Some(child) = state.0.lock().unwrap().take() {
+                // 先把 child 从 MutexGuard 里 take 出来，让 lock 立刻释放；
+                // 否则 borrow checker 报 E0597（MutexGuard 临时对象的借用越过 state 的生命周期）
+                let child = state.0.lock().unwrap().take();
+                if let Some(child) = child {
                     let _ = child.kill();
                 }
             }
