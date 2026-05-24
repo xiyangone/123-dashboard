@@ -9,9 +9,17 @@ export interface SSEState<T> {
 
 /**
  * 优先用 SSE；端点不可达时回退到 1.5s 轮询 /api/snapshot。
- * 5173 端口下的 /sse 走 Vite proxy；生产或独立 8090 也兼容。
+ *
+ * Dev (vite 5173) 用相对路径，vite proxy 转 8090；
+ * Build/Tauri portable 在 tauri://localhost 协议下相对路径会变成 tauri://localhost/sse → 404，
+ * 必须显式绝对到 http://127.0.0.1:8090（backend 已开 CORS allow_origins=["*"]）。
  */
-export function useSSE<T = unknown>(url: string = '/sse', fallback: string = '/api/snapshot'): SSEState<T> {
+const BACKEND_PREFIX = import.meta.env.PROD ? 'http://127.0.0.1:8090' : '';
+
+export function useSSE<T = unknown>(
+  url: string = `${BACKEND_PREFIX}/sse`,
+  fallback: string = `${BACKEND_PREFIX}/api/snapshot`,
+): SSEState<T> {
   const [state, setState] = useState<SSEState<T>>({
     data: null,
     connected: false,
