@@ -48,7 +48,8 @@ function LiveIndicator({ connected, lastTick }: { connected: boolean; lastTick: 
 }
 
 export default function App() {
-  const { data, connected, error, lastTick } = useSSE<Snapshot>('/sse', '/api/snapshot');
+  // 不传参，让 useSSE 用默认值（dev 相对走 vite proxy，prod 绝对到 http://127.0.0.1:8090）
+  const { data, connected, error, lastTick } = useSSE<Snapshot>();
 
   const stats = useMemo(() => {
     if (!data) {
