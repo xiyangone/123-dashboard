@@ -1,0 +1,27 @@
+# Node / Vite
+node_modules/
+dist/
+dist-release/
+*.tsbuildinfo
+
+# PyInstaller
+backend/build/
+backend/dist/
+backend/__pycache__/
+backend/*.spec.bak
+
+# Tauri / Rust
+frontend/src-tauri/target/
+frontend/src-tauri/bin/
+frontend/src-tauri/gen/
+
+# Local screenshots / temp
+.playwright-cli/
+*.png
+!frontend/src-tauri/icons/*.png
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
