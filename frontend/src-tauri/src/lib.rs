@@ -6,13 +6,36 @@
 //
 // 通过 tauri-plugin-shell 的 sidecar API 调用 src-tauri/bin/uvicorn-app-<triple>.exe
 
-use std::sync::Mutex;
+use std::{process::Command, sync::Mutex};
 use tauri::{Manager, RunEvent};
-use tauri_plugin_shell::process::CommandChild;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
 /// 全局存放 sidecar 子进程句柄，方便退出时 kill。
 struct SidecarChild(Mutex<Option<CommandChild>>);
+
+fn kill_sidecar_tree(child: CommandChild) {
+    let pid = child.pid();
+
+    #[cfg(windows)]
+    {
+        let pid_arg = pid.to_string();
+        let killed = Command::new("taskkill")
+            .args(["/PID", &pid_arg, "/T", "/F"])
+            .status()
+            .map(|status| status.success())
+            .unwrap_or(false);
+
+        if !killed {
+            let _ = child.kill();
+        }
+    }
+
+    #[cfg(not(windows))]
+    {
+        let _ = child.kill();
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -24,7 +47,37 @@ pub fn run() {
             let state = app.state::<SidecarChild>();
             match app.shell().sidecar("uvicorn-app") {
                 Ok(sidecar) => match sidecar.spawn() {
-                    Ok((_rx, child)) => {
+                    Ok((mut rx, child)) => {
+                        tauri::async_runtime::spawn(async move {
+                            while let Some(event) = rx.recv().await {
+                                match event {
+                                    CommandEvent::Stdout(line) => {
+                                        eprintln!(
+                                            "[dashboard-tauri][uvicorn stdout] {}",
+                                            String::from_utf8_lossy(&line)
+                                        );
+                                    }
+                                    CommandEvent::Stderr(line) => {
+                                        eprintln!(
+                                            "[dashboard-tauri][uvicorn stderr] {}",
+                                            String::from_utf8_lossy(&line)
+                                        );
+                                    }
+                                    CommandEvent::Error(err) => {
+                                        eprintln!("[dashboard-tauri][uvicorn error] {err}");
+                                    }
+                                    CommandEvent::Terminated(payload) => {
+                                        eprintln!(
+                                            "[dashboard-tauri][uvicorn terminated] code={:?} signal={:?}",
+                                            payload.code, payload.signal
+                                        );
+                                        break;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        });
+
                         // 保存句柄供退出时使用
                         *state.0.lock().unwrap() = Some(child);
                     }
@@ -50,7 +103,7 @@ pub fn run() {
                 // 否则 borrow checker 报 E0597（MutexGuard 临时对象的借用越过 state 的生命周期）
                 let child = state.0.lock().unwrap().take();
                 if let Some(child) = child {
-                    let _ = child.kill();
+                    kill_sidecar_tree(child);
                 }
             }
         });
