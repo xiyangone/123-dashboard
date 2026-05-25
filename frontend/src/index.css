@@ -8,48 +8,208 @@
   #root {
     height: 100%;
   }
+
   body {
-    background-color: #ffffff;
-    color: #18181b;
-    font-feature-settings: 'tnum' 1, 'ss01' 1, 'ss02' 1;
+    margin: 0;
+    min-height: 100vh;
+    background: #f8fafc;
+    color: #0f172a;
+    line-height: 1.5;
     text-rendering: optimizeLegibility;
   }
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     background: #d4d4d8;
-    border-radius: 4px;
+    border-radius: 999px;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     background: #a1a1aa;
   }
 }
 
 @layer components {
+  .shell {
+    width: min(1440px, calc(100vw - 32px));
+    margin: 0 auto;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid #e2e8f0;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+  }
+
+  .topbar-inner {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-title {
+    margin: 0;
+    color: #0f172a;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+
+  .brand-subtitle {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .public-shell {
+    padding: 24px 0 42px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .page-header h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 24px;
+    line-height: 1.1;
+    font-weight: 900;
+    letter-spacing: 0;
+  }
+
+  .page-header p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 14px;
+  }
+
   .card {
-    @apply rounded-xl bg-white shadow-sm ring-1 ring-zinc-200;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
   }
+
   .stat-num {
-    @apply text-3xl font-semibold tabular-nums tracking-tight;
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0;
   }
+
   .stat-label {
-    @apply mt-1 text-[11px] uppercase tracking-[0.18em] text-zinc-500;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 11px;
+    letter-spacing: 0;
   }
+
   .pill {
-    @apply inline-flex items-center justify-center rounded-md px-1.5 py-[1px] text-[11px] font-medium tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1;
+    white-space: nowrap;
   }
+
   .th {
-    @apply sticky top-0 z-10 bg-zinc-50/95 backdrop-blur text-[11px] uppercase tracking-wider text-zinc-500 px-3 py-2 text-left border-b border-zinc-200;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #e2e8f0;
+    background: rgba(248, 250, 252, 0.96);
+    color: #64748b;
+    font-size: 11px;
+    text-align: left;
+    letter-spacing: 0;
+    backdrop-filter: blur(14px);
+    padding: 10px 12px;
   }
+
   .td {
-    @apply px-3 py-2 text-[13px] tabular-nums whitespace-nowrap;
+    padding: 10px 12px;
+    color: #0f172a;
+    font-size: 13px;
+    white-space: nowrap;
   }
+
   .row {
-    @apply border-b border-zinc-100 hover:bg-zinc-50 transition-colors;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background 0.18s ease;
+  }
+
+  .row:hover {
+    background: #f8fafc;
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 13px;
+    border: 1px solid #dbe4f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .status-chip.blue {
+    border-color: #bae6fd;
+    background: #f0f9ff;
+    color: #0369a1;
+  }
+
+  .status-chip.danger {
+    border-color: #fecaca;
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+
+  .status-chip:hover {
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
   }
 }

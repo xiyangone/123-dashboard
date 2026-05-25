@@ -76,12 +76,12 @@ jobs:
           New-Item -ItemType Directory -Force -Path $portable | Out-Null
 
           $exe = "frontend/src-tauri/target/release/dashboard-tauri.exe"
-          $sidecar = "frontend/src-tauri/bin/uvicorn-app-x86_64-pc-windows-msvc.exe"
+          $sidecar = "frontend/src-tauri/target/release/uvicorn-app.exe"
           if (-not (Test-Path $exe))     { throw "missing main exe: $exe" }
           if (-not (Test-Path $sidecar)) { throw "missing sidecar: $sidecar" }
 
           Copy-Item $exe     "$portable/dashboard-tauri.exe" -Force
-          Copy-Item $sidecar "$portable/uvicorn-app-x86_64-pc-windows-msvc.exe" -Force
+          Copy-Item $sidecar "$portable/uvicorn-app.exe" -Force
 
           Compress-Archive -Path "$portable/*" -DestinationPath "$out/dashboard-portable.zip" -Force
           Remove-Item $portable -Recurse -Force

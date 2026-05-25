@@ -54,8 +54,12 @@ export interface BatchAccount {
   register_ok?: boolean;
   checkout_url?: boolean | string;
   paypal_ok?: boolean;
+  paypal_attempt?: number;
+  paypal_attempts_total?: number;
   paypal_attempts_done?: number;
   paypal_done_at?: number;
+  roxy_dir_id?: string;
+  roxy_ws?: string;
   at_ok?: boolean;
   oauth_attempts?: number;
   codex2api_id?: number;

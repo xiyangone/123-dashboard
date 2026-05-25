@@ -21,18 +21,21 @@ pub fn run() {
         .manage(SidecarChild(Mutex::new(None)))
         .setup(|app| {
             // 启动后端 sidecar：bin/uvicorn-app-<triple>.exe
-            let sidecar = app
-                .shell()
-                .sidecar("uvicorn-app")
-                .expect("failed to locate uvicorn-app sidecar");
-
-            let (_rx, child) = sidecar
-                .spawn()
-                .expect("failed to spawn uvicorn-app sidecar");
-
-            // 保存句柄供退出时使用
             let state = app.state::<SidecarChild>();
-            *state.0.lock().unwrap() = Some(child);
+            match app.shell().sidecar("uvicorn-app") {
+                Ok(sidecar) => match sidecar.spawn() {
+                    Ok((_rx, child)) => {
+                        // 保存句柄供退出时使用
+                        *state.0.lock().unwrap() = Some(child);
+                    }
+                    Err(err) => {
+                        eprintln!("[dashboard-tauri] failed to spawn uvicorn-app sidecar: {err}");
+                    }
+                },
+                Err(err) => {
+                    eprintln!("[dashboard-tauri] failed to locate uvicorn-app sidecar: {err}");
+                }
+            }
 
             Ok(())
         })
