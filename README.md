@@ -1,6 +1,13 @@
 # plus_paypal_auto · live dashboard
 
-替代旧的 pwsh `watch_batch_progress.py` 文本面板。后端汇总本地 JSON，前端 React + Tailwind 浅色仪表盘，SSE 1.5s 实时刷新。
+进度可视化**唯一入口**（2026-05-26 起，旧终端 `watch_batch_progress.py` 与 Rust `progress_rs/` 已全部删除）。后端汇总本地 JSON，前端 React + Tailwind 浅色仪表盘，SSE 1.5s 实时刷新，Tauri 2 打包为单一 portable exe。
+
+## 设计原则
+
+- **F-pattern 顶部 4 块 Hero KPI**（Plus / 进行中 / 失败 / 总数），关键数字 `clamp(2.6rem, 5vw, 3.4rem)`，第一眼就能扫完
+- **严格语义色**：`emerald` 成功、`amber` 进行中 / 警告、`red` 失败、`zinc` 中性，禁止彩色 pill 堆叠
+- **渐进披露**：汇总 → 进度条 → 明细，下钻才看每个号
+- **响应式**：4 列 KPI 桌面 / 2 列移动；topbar 阶段名超长自动截断
 
 ## 端口
 
@@ -19,6 +26,22 @@ portable 目录需要同时包含：
 - `uvicorn-app.exe`
 
 主 exe 会自动拉起后端 sidecar，不需要再开两个 pwsh 窗口。
+
+## 构建 portable exe
+
+需要 Rust 工具链（`cargo` 1.95+）+ Node.js + 项目 venv。前端改动后重新打包：
+
+```pwsh
+cd Z:\123\dashboard\frontend
+npm install                # 首次或 package.json 改动时跑
+npm run tauri:build        # 触发 vite build + Tauri release 编译，~1.5 min
+
+# 把两个 exe 同步到 portable 目录
+Copy-Item -Force src-tauri\target\release\dashboard-tauri.exe ..\dist-release\portable\
+Copy-Item -Force src-tauri\target\release\uvicorn-app.exe     ..\dist-release\portable\
+```
+
+NSIS 安装包和 MSI 在 `src-tauri\target\release\bundle\` 下；portable 路线只用根 exe + sidecar exe 两个文件。
 
 ## 开发调试
 
@@ -79,12 +102,11 @@ npm run dev
 
 ## 界面
 
-- 顶部指标：批次总数、注册成功、支付成功、Plus 数、进行中、失败数、回调成功、回调失败
-- 主面板：全宽批次进度（注册/支付/回调三条进度 + 汇总条 + 回调队列条 + 回调运行中 + 账号明细表）
-- 次级面板：AT 测活与复活（处理进度、健康结果、复活尝试、状态明细、最近事件）
-- 明细面板：死号清单 + 回调概览（最近成功 + 失败明细）
-- 右上角 pulse 圆点：`emerald` = SSE live，`amber` = 已回退轮询
-- 全局：浅色工作台风格，卡片白底、细边框、状态 chip 和 `tabular-nums` 数字对齐
+- **顶部 Hero KPI 4 块**：Plus（emerald）/ 进行中（amber）/ 失败（red）/ 批次总数（zinc）
+- **3 段进度条**：注册 / 支付 / Plus 共一张卡片，gray track + 语义色 fill
+- **批次明细表**：账号 · 母号组 · W · 流水线（注/付/回 三个 StepDot 小圆点）· 阶段 · AT · 支付/回调
+- **次级面板**：AT 健康（Codex2apiHealth）+ 死号 / 回调概览（DeadList），1440px+ 两列并排
+- **顶栏**：左 brand + 当前阶段（超长截断），右 SSE pulse `emerald` 在线 / `amber` 轮询回退 + 上次 tick 秒数
 
 ## 进度同步
 
@@ -114,16 +136,24 @@ Z:/123/dashboard/
 │   ├── tailwind.config.js
 │   ├── tsconfig.json
 │   ├── vite.config.ts
-│   └── src/
-│       ├── App.tsx
-│       ├── main.tsx
-│       ├── index.css
-│       ├── types.ts
-│       ├── hooks/useSSE.ts
-│       └── components/
-│           ├── BatchProgress.tsx
-│           ├── Codex2apiHealth.tsx
-│           └── DeadList.tsx
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   ├── index.css
+│   │   ├── types.ts
+│   │   ├── hooks/useSSE.ts
+│   │   └── components/
+│   │       ├── BatchProgress.tsx
+│   │       ├── Codex2apiHealth.tsx
+│   │       └── DeadList.tsx
+│   └── src-tauri/                # Tauri 2 Rust 壳 + uvicorn sidecar bin
+│       ├── Cargo.toml
+│       ├── tauri.conf.json
+│       ├── src/
+│       └── bin/uvicorn-app.exe
+├── dist-release/portable/        # 双击启动的 portable 产物（exe + sidecar）
+│   ├── dashboard-tauri.exe
+│   └── uvicorn-app.exe
 ├── start.ps1
 └── README.md
 ```
