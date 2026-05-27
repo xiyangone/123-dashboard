@@ -19,15 +19,15 @@
 ## 启动 exe
 
 ```pwsh
-Z:\123\dashboard\dist-release\portable\dashboard-tauri.exe
+Z:\123\dashboard-tauri.exe
 ```
 
-portable 目录需要同时包含：
+根目录需要同时包含：
 
 - `dashboard-tauri.exe`
 - `uvicorn-app.exe`
 
-主 exe 会自动拉起后端 sidecar，不需要再开两个 pwsh 窗口。
+主 exe 会自动拉起后端 sidecar，不需要再开两个 pwsh 窗口。`dist-release/portable/` 仍保留一份镜像备份。
 
 ## 构建 portable exe
 
@@ -94,11 +94,13 @@ npm run dev
 | 字段           | 文件                                            |
 |----------------|-------------------------------------------------|
 | batch          | `Z:/123/plus_paypal_auto/batch_progress.json`   |
-| codex2api      | `Z:/123/_mcp_tmp/codex2api_progress.json`       |
+| codex2api      | `Z:/123/_mcp_tmp/codex2api_progress.json` + codex2api `/api/admin/accounts` 实时回退 |
 | phone_inuse    | `Z:/123/_mcp_tmp/phone_pool_inuse.json` (兼容保留，当前 UI 不展示) |
 | phone_exhausted| `Z:/123/_mcp_tmp/phone_pool_exhausted.json` (兼容保留，当前 UI 不展示) |
 | callback       | `Z:/123/plus_paypal_auto/callback_state.json`   |
 | dead           | `Z:/123/pp_failed_accounts.json`                |
+
+codex2api 字段优先使用 `codex2api_progress.json`；当文件超过 5 分钟未更新时，后端自动回退去拉 `codex2api` admin `/api/admin/accounts`，把当前账号列表整成同样形状返回，`source` 标记为 `codex2api-live`。admin key 取自 `Z:/123/plus_paypal_auto/configs/config_w1.json` 的 `codex2api.admin_secret`。
 
 任一文件缺失或解析失败时，对应字段安全降级为 `{}` 或 `[]`，前端会自然显示空态。
 
