@@ -121,7 +121,7 @@
   /* 品牌字 — 渐变文字（subtle） */
   .brand-title {
     margin: 0;
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 800;
     letter-spacing: -0.02em;
     background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
@@ -129,6 +129,41 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: #0f172a;
+  }
+
+  /* 品牌徽标 — 渐变方块带"进"字 */
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #38bdf8 0%, #818cf8 60%, #a855f7 100%);
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+      0 4px 10px -3px rgba(99, 102, 241, 0.4);
+  }
+
+  /* 顶栏副信息（来源） */
+  .brand-sub {
+    display: inline-flex;
+    align-items: baseline;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    padding-left: 10px;
+    margin-left: 4px;
+    border-left: 1px solid rgba(15, 23, 42, 0.08);
   }
 
   /* SSE 状态指示灯加发光圈 */
@@ -413,27 +448,189 @@
     white-space: nowrap;
   }
 
-  /* 行 hover：渐变 + 左侧 3px 高亮色条 */
+  /* 行 hover：极淡底色，不抢戏 */
   .row {
     position: relative;
     border-bottom: 1px solid rgba(241, 245, 249, 0.7);
-    transition: background 0.2s ease;
+    transition: background 0.15s ease;
   }
 
   .row:hover {
-    background: linear-gradient(90deg, rgba(56, 189, 248, 0.06) 0%, rgba(56, 189, 248, 0.02) 40%, transparent 90%);
+    background: rgba(248, 250, 252, 0.7);
   }
 
-  .row:hover::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 4px;
-    bottom: 4px;
-    width: 3px;
-    background: linear-gradient(180deg, #38bdf8, #818cf8);
-    border-radius: 0 2px 2px 0;
-    box-shadow: 0 0 8px rgba(99, 102, 241, 0.35);
+  /* 流水线 4 步骤箭头 */
+  .pipe {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+  .pipe-step {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .pipe-step .pipe-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: #d4d8e0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+  .pipe-step.done { color: #047857; }
+  .pipe-step.done .pipe-dot {
+    background: #10b981;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 0 0 2px rgba(16, 185, 129, 0.18);
+  }
+  .pipe-step.active { color: #b45309; font-weight: 700; }
+  .pipe-step.active .pipe-dot {
+    background: #f59e0b;
+    animation: pulseSoft 1.6s ease-in-out infinite;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 0 0 3px rgba(245, 158, 11, 0.22),
+      0 0 8px rgba(245, 158, 11, 0.5);
+  }
+  .pipe-step.failed { color: #b91c1c; font-weight: 700; }
+  .pipe-step.failed .pipe-dot {
+    background: #ef4444;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      0 0 0 3px rgba(239, 68, 68, 0.22);
+  }
+  .pipe-sep {
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pipe-meta {
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #b45309;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .pipe-meta.failed { color: #b91c1c; }
+  .pipe-meta.done { color: #047857; }
+
+  /* 现在在跑面板 */
+  .now-running {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+    background: linear-gradient(180deg, rgba(254, 252, 232, 0.55), rgba(255, 251, 235, 0.32));
+  }
+  .now-running-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .now-running-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .now-running-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+  }
+  .now-running-count b {
+    color: #b45309;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .nr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px;
+  }
+  .nr-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 251, 235, 0.6));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 0 0 1px rgba(245, 158, 11, 0.22);
+  }
+  .nr-worker {
+    font-size: 12px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+  .nr-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: #f59e0b;
+    box-shadow:
+      0 0 0 3px rgba(245, 158, 11, 0.22),
+      0 0 8px rgba(245, 158, 11, 0.55);
+    animation: pulseSoft 1.6s ease-in-out infinite;
+  }
+  .nr-email {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: -0.005em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+  }
+  .nr-arrow {
+    color: #cbd5e1;
+    font-size: 12px;
+  }
+  .nr-stage {
+    font-size: 12px;
+    font-weight: 700;
+    color: #b45309;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .nr-empty {
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 0;
+  }
+
+  /* 排队 pill */
+  .queue-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    background: linear-gradient(180deg, rgba(241, 245, 249, 0.85), rgba(226, 232, 240, 0.65));
+    color: #475569;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .queue-pill b {
+    color: #0f172a;
+    font-weight: 800;
   }
 
   /* 状态 chip — 单层细描边 + inset 高光 */

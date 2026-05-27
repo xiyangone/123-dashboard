@@ -20,51 +20,6 @@ const TONE_BAR: Record<Tone, string> = {
   zinc: 'bg-zinc-300',
 };
 
-const STAGE_TOP_LABELS: Record<string, string> = {
-  startup: '初始化',
-  final: '收尾中',
-  'post-callback-workers': '回调补救',
-  'callback-running': '回调进行中',
-  'callback-failed': '回调失败',
-  'callback-queued': '回调排队',
-  'callback-pending': '待回调',
-  registered: '已注册',
-  registering: '注册中',
-  'confirm-existing': '确认已存在',
-  'register-failed': '注册失败',
-  'checkout-link': '生成链接',
-  'token-failed': '取 AT 失败',
-  'checkout-failed': '链接失败',
-  'paypal-running': '支付中',
-  'paypal-retry-queued': '等待重试',
-  'paypal-failed': '支付失败',
-  'paypal-failed-no-trial': '无试用',
-  'paypal-requeued': '支付重排',
-  'drain-complete': '该批已清空',
-  'final-drain': '尾轮清空',
-  'post-account': '账号收尾',
-  success: '已完成',
-};
-
-function localizeStage(raw: string): string {
-  if (!raw || raw === '-') return '-';
-  // 格式可能是 "W1:foo@mail.com:callback-running:1/3" 这种复合 key
-  const parts = raw.split(':');
-  if (parts.length >= 3) {
-    const worker = parts[0];
-    const email = parts[1];
-    const tail = parts.slice(2).join(':');
-    const tailKey = tail.split(':')[0] ?? tail;
-    const label = STAGE_TOP_LABELS[tailKey];
-    const local = email.split('@')[0];
-    if (label) {
-      return `${worker} · ${local} · ${label}${tail.includes(':') ? ' ' + tail.split(':').slice(1).join(':') : ''}`;
-    }
-    return `${worker} · ${local} · ${tail}`;
-  }
-  return STAGE_TOP_LABELS[raw] ?? raw;
-}
-
 function Kpi({ label, value, tone, hint }: { label: string; value: number | string; tone: Tone; hint?: string }) {
   return (
     <div className="kpi-card">
@@ -100,7 +55,7 @@ export default function App() {
   const stats = useMemo(() => {
     const acc = data?.batch?.accounts ?? {};
     const cbMap = data?.callback ?? {};
-    let total = 0, regOk = 0, ppOk = 0, cbOk = 0, plus = 0, failed = 0, active = 0;
+    let total = 0, regOk = 0, ppOk = 0, cbOk = 0, plus = 0, failed = 0, active = 0, noTrial = 0;
     for (const [email, r] of Object.entries(acc)) {
       total += 1;
       if (r.register_ok) regOk += 1;
@@ -111,8 +66,10 @@ export default function App() {
       if (r.at_ok || r.local_plus_export) plus += 1;
       const stage = String(r.stage ?? '');
       const status = String(r.status ?? '');
-      const isFailed = status === 'failed' || status === 'permanently_failed' || stage.endsWith('-failed');
-      if (isFailed) failed += 1;
+      const isNoTrial = stage === 'paypal-failed-no-trial';
+      const isFailed = status === 'failed' || status === 'permanently_failed' || (stage.endsWith('-failed') && !isNoTrial);
+      if (isNoTrial) noTrial += 1;
+      else if (isFailed) failed += 1;
       else if (!(r.at_ok || r.local_plus_export) && /register|checkout|paypal|callback/.test(stage)) active += 1;
     }
     if (total === 0 && data?.batch?.summary?.total) {
@@ -125,32 +82,31 @@ export default function App() {
       ppOk = (s.success ?? 0) + (s.pp_done_pending_callback ?? 0);
       active = (s.pending_register ?? 0) + (s.registered_pending_pp ?? 0) + (s.pp_done_pending_callback ?? 0);
     }
-    return { total, regOk, ppOk, cbOk, plus, failed, active };
+    return { total, regOk, ppOk, cbOk, plus, failed, active, noTrial };
   }, [data]);
 
   const lastTickAgo = lastTick ? Math.max(0, Math.floor((Date.now() - lastTick) / 1000)) : null;
   const batchUpdated = data?.batch?.updated_at ?? '';
-  const rawStage = data?.batch?.stage ?? '-';
-  const stage = localizeStage(rawStage);
+  const accountsFile = data?.batch?.accounts_file ?? '';
 
   return (
     <div className="app-root">
       <header className="topbar">
         <div className="shell topbar-inner">
-          <div className="flex items-baseline gap-3 min-w-0 flex-1">
-            <h1 className="brand-title whitespace-nowrap">plus_paypal_auto</h1>
-            <span className="topbar-stage min-w-0">
-              <span className="text-zinc-400">阶段</span>
-              <span className="ml-1.5 font-bold text-zinc-900 truncate" title={rawStage}>{stage}</span>
-            </span>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <span className="brand-mark" aria-hidden>进</span>
+            <h1 className="brand-title whitespace-nowrap">进度面板</h1>
+            {accountsFile && (
+              <span className="brand-sub min-w-0 truncate" title={accountsFile}>
+                <span className="text-zinc-400">来源</span>
+                <span className="ml-1.5 font-semibold text-zinc-700">{accountsFile}</span>
+              </span>
+            )}
           </div>
           <div className="topbar-meta flex items-center gap-1.5 whitespace-nowrap">
-            <span
-              className={`inline-block h-2 w-2 rounded-full ${connected ? 'bg-emerald-500' : 'bg-amber-500'} animate-pulseSoft`}
-              aria-hidden
-            />
-            <span>{connected ? 'SSE 在线' : '轮询回退'}</span>
-            {lastTickAgo !== null && <span className="text-zinc-400">· {lastTickAgo}s</span>}
+            <span className={`sse-dot ${connected ? 'online' : 'fallback'}`} aria-hidden />
+            <span className="font-semibold text-zinc-700">{connected ? '已连接' : '轮询中'}</span>
+            {lastTickAgo !== null && <span className="text-zinc-400">· {lastTickAgo}s 前</span>}
           </div>
         </div>
       </header>
@@ -161,9 +117,14 @@ export default function App() {
         )}
 
         <section className="kpi-grid">
-          <Kpi label="Plus" value={stats.plus} tone="emerald" hint={`/ 总数 ${stats.total}`} />
+          <Kpi label="升级成功" value={stats.plus} tone="emerald" hint={`/ 总数 ${stats.total}`} />
           <Kpi label="进行中" value={stats.active} tone={stats.active > 0 ? 'amber' : 'zinc'} />
-          <Kpi label="失败" value={stats.failed} tone={stats.failed > 0 ? 'red' : 'zinc'} />
+          <Kpi
+            label="失败"
+            value={stats.failed}
+            tone={stats.failed > 0 ? 'red' : 'zinc'}
+            hint={stats.noTrial > 0 ? `含无试用 ${stats.noTrial}` : undefined}
+          />
           <Kpi label="批次总数" value={stats.total} tone="zinc" />
         </section>
 
@@ -171,7 +132,7 @@ export default function App() {
           <Bar label="注册" done={stats.regOk} total={stats.total} />
           <Bar label="支付" done={stats.ppOk} total={stats.total} />
           <Bar label="回调" done={stats.cbOk} total={stats.total} />
-          <Bar label="Plus" done={stats.plus} total={stats.total} />
+          <Bar label="升级" done={stats.plus} total={stats.total} />
         </section>
 
         <BatchProgress batch={data?.batch} />
@@ -179,11 +140,11 @@ export default function App() {
         <Codex2apiHealth codex2api={data?.codex2api} />
 
         <footer className="footer-bar">
-          <span>后端 http://127.0.0.1:8090</span>
+          <span>后端 127.0.0.1:8090</span>
           <span>·</span>
-          <span>刷新 1.5s</span>
+          <span>刷新 1.5 秒</span>
           <span>·</span>
-          <span>batch_progress {batchUpdated || '-'}</span>
+          <span>批次更新 {batchUpdated || '-'}</span>
         </footer>
       </main>
     </div>
