@@ -15,6 +15,10 @@ frontend/src-tauri/target/
 frontend/src-tauri/bin/
 frontend/src-tauri/gen/
 
+# Built exe at dashboard root (镜像在 dist-release/portable/)
+/dashboard-tauri.exe
+/uvicorn-app.exe
+
 # Local screenshots / temp
 .playwright-cli/
 *.png

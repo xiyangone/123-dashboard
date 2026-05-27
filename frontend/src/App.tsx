@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useSSE } from './hooks/useSSE';
 import type { Snapshot } from './types';
 import BatchProgress from './components/BatchProgress';
-import Codex2apiHealth from './components/Codex2apiHealth';
 
 type Tone = 'emerald' | 'amber' | 'red' | 'zinc';
 
@@ -136,8 +135,6 @@ export default function App() {
         </section>
 
         <BatchProgress batch={data?.batch} />
-
-        <Codex2apiHealth codex2api={data?.codex2api} />
 
         <footer className="footer-bar">
           <span>后端 127.0.0.1:8090</span>
