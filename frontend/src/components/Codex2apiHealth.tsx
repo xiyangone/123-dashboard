@@ -26,6 +26,24 @@ const STATUS_LABEL: Record<string, string> = {
   pending: '等待',
 };
 
+const STAGE_LABEL: Record<string, string> = {
+  'scan-start': '扫描开始',
+  'scan-complete': '扫描完成',
+  'revive-start': '复活开始',
+  'revive-complete': '复活完成',
+  'revive-pending': '待复活',
+  'cleaning-stale': '清理失效',
+  checking: '检测中',
+  healthy: '健康',
+  reviving: '复活中',
+  revived: '已复活',
+  'revived-cleaned': '复活并清理',
+  cleaned: '已清理',
+  'query-failed': '查询失败',
+  failed: '失败',
+  dead: '失效',
+};
+
 const wrapText = 'block whitespace-normal break-words leading-5';
 
 function statusPill(status: string) {
@@ -83,7 +101,7 @@ export default function Codex2apiHealth({ codex2api }: { codex2api?: Codex2apiPr
       <div className="px-4 py-3 border-b border-zinc-200">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold tracking-wide text-zinc-900">AT 测活与复活</h2>
-          <span className="status-chip h-8 min-h-8">{p.stage ?? '-'}</span>
+          <span className="status-chip h-8 min-h-8" title={p.stage ?? ''}>{STAGE_LABEL[p.stage ?? ''] ?? (p.stage ?? '-')}</span>
         </div>
         <div className="space-y-2">
           <div>
@@ -108,7 +126,7 @@ export default function Codex2apiHealth({ codex2api }: { codex2api?: Codex2apiPr
         </div>
       </div>
 
-      <div className="overflow-hidden">
+      <div className="codex2api-tbl-wrap overflow-y-auto overflow-x-hidden">
         <table className="w-full table-fixed text-left">
           <thead>
             <tr>
@@ -127,7 +145,7 @@ export default function Codex2apiHealth({ codex2api }: { codex2api?: Codex2apiPr
                 </td>
               </tr>
             ) : (
-              visible.slice(0, 16).map(([email, r], idx) => (
+              visible.slice(0, 64).map(([email, r], idx) => (
                 <tr key={email} className="row">
                   <td className="td text-right text-zinc-500">{idx + 1}</td>
                   <td className="td">
@@ -154,7 +172,7 @@ export default function Codex2apiHealth({ codex2api }: { codex2api?: Codex2apiPr
       {events.length > 0 && (
         <div className="px-4 py-3 border-t border-zinc-200 bg-zinc-50/60">
           <div className="mb-1.5 text-[11px] text-zinc-500">最近事件</div>
-          <ul className="space-y-1.5">
+          <ul className="space-y-1.5 max-h-44 overflow-y-auto overflow-x-hidden pr-1">
             {events.map((ev, i) => (
               <li key={i} className="grid grid-cols-[44px_minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2 text-[11px]">
                 <span className="text-zinc-400 tabular-nums">{(ev.at ?? '').slice(11, 19) || '-'}</span>

@@ -8,6 +8,8 @@
 - **严格语义色**：`emerald` 成功、`amber` 进行中 / 警告、`red` 失败、`zinc` 中性，禁止彩色 pill 堆叠
 - **渐进披露**：汇总 → 进度条 → 明细，下钻才看每个号
 - **响应式**：4 列 KPI 桌面 / 2 列移动；topbar 阶段名超长自动截断
+- **毛玻璃质感**：彩色径向渐变衬底 + `backdrop-filter: blur(16-18px) saturate(160%)` + 半透白 + 内嵌高光，KPI/卡片/topbar 统一玻璃风
+- **全量汉化**：`batch_pipeline.py` 与 `codex2api` 暴露的所有 stage / status 在 UI 层做中文映射，包括 `post-callback-workers`→`回调补救`、`drain-complete`→`该批已清空`、`scan-complete`→`扫描完成` 等
 
 ## 端口
 
@@ -103,10 +105,11 @@ npm run dev
 ## 界面
 
 - **顶部 Hero KPI 4 块**：Plus（emerald）/ 进行中（amber）/ 失败（red）/ 批次总数（zinc）
-- **3 段进度条**：注册 / 支付 / Plus 共一张卡片，gray track + 语义色 fill
+- **4 段进度条**：注册 / 支付 / 回调 / Plus 同一张卡片，gray track + 语义色 fill；回调以 `at_ok || local_plus_export || callback_state==success` 为完成判定
 - **批次明细表**：账号 · 母号组 · W · 流水线（注/付/回 三个 StepDot 小圆点）· 阶段 · AT · 支付/回调
-- **次级面板**：AT 健康（Codex2apiHealth）+ 死号 / 回调概览（DeadList），1440px+ 两列并排
-- **顶栏**：左 brand + 当前阶段（超长截断），右 SSE pulse `emerald` 在线 / `amber` 轮询回退 + 上次 tick 秒数
+- **AT 测活与复活**（`Codex2apiHealth`，全宽单列）：处理进度 / 健康结果 / 复活尝试 / 已复活 / 清理 / 死号 / 失败 / 跳过 + 异常账号表（最多 64 行，超出滚动）+ 最近 8 条事件（独立滚动）
+- **顶栏**：左 brand + 当前阶段（超长截断、支持 `W1:foo@mail:callback-running:1/3` 复合 key 中文化），右 SSE pulse `emerald` 在线 / `amber` 轮询回退 + 上次 tick 秒数
+- 已下线：`DeadList` 死号清单 / 回调概览板块（信息全部并入 `BatchProgress` 汇总条 + `Codex2apiHealth` 死号/失败统计）
 
 ## 进度同步
 
@@ -144,8 +147,7 @@ Z:/123/dashboard/
 │   │   ├── hooks/useSSE.ts
 │   │   └── components/
 │   │       ├── BatchProgress.tsx
-│   │       ├── Codex2apiHealth.tsx
-│   │       └── DeadList.tsx
+│   │       └── Codex2apiHealth.tsx
 │   └── src-tauri/                # Tauri 2 Rust 壳 + uvicorn sidecar bin
 │       ├── Cargo.toml
 │       ├── tauri.conf.json

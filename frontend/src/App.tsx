@@ -3,7 +3,6 @@ import { useSSE } from './hooks/useSSE';
 import type { Snapshot } from './types';
 import BatchProgress from './components/BatchProgress';
 import Codex2apiHealth from './components/Codex2apiHealth';
-import DeadList from './components/DeadList';
 
 type Tone = 'emerald' | 'amber' | 'red' | 'zinc';
 
@@ -20,6 +19,51 @@ const TONE_BAR: Record<Tone, string> = {
   red: 'bg-red-500',
   zinc: 'bg-zinc-300',
 };
+
+const STAGE_TOP_LABELS: Record<string, string> = {
+  startup: '初始化',
+  final: '收尾中',
+  'post-callback-workers': '回调补救',
+  'callback-running': '回调进行中',
+  'callback-failed': '回调失败',
+  'callback-queued': '回调排队',
+  'callback-pending': '待回调',
+  registered: '已注册',
+  registering: '注册中',
+  'confirm-existing': '确认已存在',
+  'register-failed': '注册失败',
+  'checkout-link': '生成链接',
+  'token-failed': '取 AT 失败',
+  'checkout-failed': '链接失败',
+  'paypal-running': '支付中',
+  'paypal-retry-queued': '等待重试',
+  'paypal-failed': '支付失败',
+  'paypal-failed-no-trial': '无试用',
+  'paypal-requeued': '支付重排',
+  'drain-complete': '该批已清空',
+  'final-drain': '尾轮清空',
+  'post-account': '账号收尾',
+  success: '已完成',
+};
+
+function localizeStage(raw: string): string {
+  if (!raw || raw === '-') return '-';
+  // 格式可能是 "W1:foo@mail.com:callback-running:1/3" 这种复合 key
+  const parts = raw.split(':');
+  if (parts.length >= 3) {
+    const worker = parts[0];
+    const email = parts[1];
+    const tail = parts.slice(2).join(':');
+    const tailKey = tail.split(':')[0] ?? tail;
+    const label = STAGE_TOP_LABELS[tailKey];
+    const local = email.split('@')[0];
+    if (label) {
+      return `${worker} · ${local} · ${label}${tail.includes(':') ? ' ' + tail.split(':').slice(1).join(':') : ''}`;
+    }
+    return `${worker} · ${local} · ${tail}`;
+  }
+  return STAGE_TOP_LABELS[raw] ?? raw;
+}
 
 function Kpi({ label, value, tone, hint }: { label: string; value: number | string; tone: Tone; hint?: string }) {
   return (
@@ -55,11 +99,15 @@ export default function App() {
 
   const stats = useMemo(() => {
     const acc = data?.batch?.accounts ?? {};
-    let total = 0, regOk = 0, ppOk = 0, plus = 0, failed = 0, active = 0;
-    for (const r of Object.values(acc)) {
+    const cbMap = data?.callback ?? {};
+    let total = 0, regOk = 0, ppOk = 0, cbOk = 0, plus = 0, failed = 0, active = 0;
+    for (const [email, r] of Object.entries(acc)) {
       total += 1;
       if (r.register_ok) regOk += 1;
       if (r.paypal_ok) ppOk += 1;
+      const cbEntry = cbMap[email];
+      const cbDone = (r.at_ok || r.local_plus_export || cbEntry?.status === 'success') ?? false;
+      if (cbDone) cbOk += 1;
       if (r.at_ok || r.local_plus_export) plus += 1;
       const stage = String(r.stage ?? '');
       const status = String(r.status ?? '');
@@ -71,17 +119,19 @@ export default function App() {
       const s = data.batch.summary;
       total = s.total ?? 0;
       plus = s.success ?? 0;
+      cbOk = s.success ?? 0;
       failed = s.failed ?? 0;
       regOk = Math.max(0, total - (s.pending_register ?? 0));
       ppOk = (s.success ?? 0) + (s.pp_done_pending_callback ?? 0);
       active = (s.pending_register ?? 0) + (s.registered_pending_pp ?? 0) + (s.pp_done_pending_callback ?? 0);
     }
-    return { total, regOk, ppOk, plus, failed, active };
+    return { total, regOk, ppOk, cbOk, plus, failed, active };
   }, [data]);
 
   const lastTickAgo = lastTick ? Math.max(0, Math.floor((Date.now() - lastTick) / 1000)) : null;
   const batchUpdated = data?.batch?.updated_at ?? '';
-  const stage = data?.batch?.stage ?? '-';
+  const rawStage = data?.batch?.stage ?? '-';
+  const stage = localizeStage(rawStage);
 
   return (
     <div className="app-root">
@@ -91,7 +141,7 @@ export default function App() {
             <h1 className="brand-title whitespace-nowrap">plus_paypal_auto</h1>
             <span className="topbar-stage min-w-0">
               <span className="text-zinc-400">阶段</span>
-              <span className="ml-1.5 font-bold text-zinc-900 truncate">{stage}</span>
+              <span className="ml-1.5 font-bold text-zinc-900 truncate" title={rawStage}>{stage}</span>
             </span>
           </div>
           <div className="topbar-meta flex items-center gap-1.5 whitespace-nowrap">
@@ -120,15 +170,13 @@ export default function App() {
         <section className="card p-6 space-y-4">
           <Bar label="注册" done={stats.regOk} total={stats.total} />
           <Bar label="支付" done={stats.ppOk} total={stats.total} />
+          <Bar label="回调" done={stats.cbOk} total={stats.total} />
           <Bar label="Plus" done={stats.plus} total={stats.total} />
         </section>
 
         <BatchProgress batch={data?.batch} />
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(360px,0.9fr)_minmax(0,2.1fr)]">
-          <Codex2apiHealth codex2api={data?.codex2api} />
-          <DeadList dead={data?.dead} callback={data?.callback} />
-        </section>
+        <Codex2apiHealth codex2api={data?.codex2api} />
 
         <footer className="footer-bar">
           <span>后端 http://127.0.0.1:8090</span>

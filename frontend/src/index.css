@@ -12,7 +12,13 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background: #fafafa;
+    /* 毛玻璃需要彩色衬底才能看出"玻璃"质感，做一层柔和渐变 + 漂浮光斑 */
+    background:
+      radial-gradient(900px 600px at 8% -10%, rgba(125, 211, 252, 0.35), transparent 60%),
+      radial-gradient(900px 700px at 100% 0%, rgba(167, 139, 250, 0.28), transparent 60%),
+      radial-gradient(800px 600px at 50% 110%, rgba(110, 231, 183, 0.25), transparent 60%),
+      linear-gradient(180deg, #f6f8fc 0%, #eef2f7 100%);
+    background-attachment: fixed;
     color: #18181b;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
@@ -30,19 +36,18 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #d4d4d8;
+    background: rgba(212, 212, 216, 0.7);
     border-radius: 999px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #a1a1aa;
+    background: rgba(161, 161, 170, 0.85);
   }
 }
 
 @layer components {
   .app-root {
     min-height: 100vh;
-    background: #fafafa;
   }
 
   .shell {
@@ -54,9 +59,11 @@
     position: sticky;
     top: 0;
     z-index: 20;
-    border-bottom: 1px solid #e4e4e7;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(228, 228, 231, 0.6);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
   }
 
   .topbar-inner {
@@ -115,16 +122,26 @@
     }
   }
 
+  /* 毛玻璃 KPI 卡：半透白 + 高斯模糊 + 柔阴影 + 高光描边 */
   .kpi-card {
-    border: 1px solid #e4e4e7;
-    border-radius: 14px;
-    background: #ffffff;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
     padding: 20px 24px;
-    transition: box-shadow 0.2s ease;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.65) inset,
+      0 12px 32px -16px rgba(15, 23, 42, 0.18);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
 
   .kpi-card:hover {
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.75) inset,
+      0 18px 40px -16px rgba(15, 23, 42, 0.24);
+    transform: translateY(-1px);
   }
 
   .kpi-label {
@@ -170,7 +187,8 @@
     height: 10px;
     overflow: hidden;
     border-radius: 999px;
-    background: #f4f4f5;
+    background: rgba(244, 244, 245, 0.85);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
   }
 
   .bar-fill {
@@ -188,10 +206,16 @@
     white-space: nowrap;
   }
 
+  /* 毛玻璃普通卡片 */
   .card {
-    border: 1px solid #e4e4e7;
-    border-radius: 14px;
-    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.65) inset,
+      0 14px 36px -18px rgba(15, 23, 42, 0.18);
   }
 
   /* 保留 stat-num / stat-label 供老组件兼容；新代码用 kpi-num */
@@ -229,8 +253,10 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid #e4e4e7;
-    background: #fafafa;
+    border-bottom: 1px solid rgba(228, 228, 231, 0.6);
+    background: rgba(250, 250, 250, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     color: #71717a;
     font-size: 11px;
     font-weight: 700;
@@ -248,12 +274,12 @@
   }
 
   .row {
-    border-bottom: 1px solid #f4f4f5;
+    border-bottom: 1px solid rgba(244, 244, 245, 0.7);
     transition: background 0.18s ease;
   }
 
   .row:hover {
-    background: #fafafa;
+    background: rgba(250, 250, 250, 0.7);
   }
 
   .status-chip {
@@ -261,9 +287,9 @@
     align-items: center;
     min-height: 28px;
     padding: 0 10px;
-    border: 1px solid #e4e4e7;
+    border: 1px solid rgba(228, 228, 231, 0.7);
     border-radius: 8px;
-    background: #fafafa;
+    background: rgba(250, 250, 250, 0.8);
     color: #52525b;
     font-size: 12px;
     font-weight: 700;
@@ -272,24 +298,26 @@
 
   .status-chip.blue {
     border-color: #bae6fd;
-    background: #f0f9ff;
+    background: rgba(240, 249, 255, 0.85);
     color: #0369a1;
   }
 
   .status-chip.danger {
     border-color: #fecaca;
-    background: #fef2f2;
+    background: rgba(254, 242, 242, 0.85);
     color: #b91c1c;
   }
 
   .alert {
     border: 1px solid #fecaca;
-    background: #fef2f2;
+    background: rgba(254, 242, 242, 0.85);
     color: #b91c1c;
     border-radius: 12px;
     padding: 10px 14px;
     font-size: 12px;
     font-weight: 600;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .footer-bar {
@@ -300,9 +328,14 @@
     gap: 10px;
     margin-top: 8px;
     padding-top: 16px;
-    border-top: 1px solid #e4e4e7;
+    border-top: 1px solid rgba(228, 228, 231, 0.6);
     color: #a1a1aa;
     font-size: 11px;
     font-variant-numeric: tabular-nums;
+  }
+
+  /* 异常账号表滚动壳：限制最大高度防止界面无限增长 */
+  .codex2api-tbl-wrap {
+    max-height: 360px;
   }
 }
