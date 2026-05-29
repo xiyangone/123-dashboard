@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[2]
+if getattr(sys, "frozen", False):
+    # PyInstaller 单文件 exe：__file__ 在临时解压目录(_MEIPASS)，须用 exe 自身位置定位项目根。
+    # portable 布局下 uvicorn-app.exe 位于 <项目根>/dashboard/，故根 = exe 上溯 1 级。
+    ROOT = Path(sys.executable).resolve().parents[1]
+else:
+    # dev（uvicorn 直跑 backend/snapshot.py）：上溯 2 级到项目根。
+    ROOT = Path(__file__).resolve().parents[2]
 
 SOURCES = {
     "batch": ROOT / "plus_paypal_auto" / "batch_progress.json",
