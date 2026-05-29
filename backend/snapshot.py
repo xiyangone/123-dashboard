@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-ROOT = Path("Z:/123")
+ROOT = Path(__file__).resolve().parents[2]
 
 SOURCES = {
     "batch": ROOT / "plus_paypal_auto" / "batch_progress.json",

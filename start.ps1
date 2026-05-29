@@ -10,7 +10,7 @@ $ErrorActionPreference = 'Stop'
 $Root      = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Backend   = Join-Path $Root 'backend'
 $Frontend  = Join-Path $Root 'frontend'
-$Venv      = 'Z:\123\.venv\Scripts\python.exe'
+$Venv      = 'Z:\codex_pp\.venv\Scripts\python.exe'
 
 if (-not (Test-Path $Venv)) {
     Write-Error "venv python 不存在: $Venv"
